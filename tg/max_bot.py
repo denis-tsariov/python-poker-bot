@@ -58,12 +58,11 @@ class max_bot(Bot):
         if player.username not in self.fold_:
           self.fold_[player.username] = 0
           self.call_[player.username] = 0
-          self.check_[player.username] = 0
           self.raise_[player.username] = 0
-        else:
-          print(f'action: {action.type}')
-          print(f'folds count: {self.fold_}, check count: {self.check_}, raise count: {self.raise_}, call count: {self.call_}')
-          getattr(self, f'{action.type}_')[player.username] += 1
+          
+        print(f'action: {action.type}')
+        print(f'folds count: {self.fold_}, raise count: {self.raise_}, call count: {self.call_}')
+        getattr(self, f'{action.type}_')[player.username] += 1
           
         print('opponent action?', action, player)
 
