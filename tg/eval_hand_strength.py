@@ -4,6 +4,7 @@ from typing import Optional, List, Tuple, Set
 import treys
 import time
 
+import random
 evaluator = treys.Evaluator()
 #from types import *
 poker_hand_percentiles = {
@@ -140,6 +141,11 @@ def gen_eval_range_map(abbreviated_hands: List[str], board: List[str]) -> dict[f
         abbreviated_hand_to_eval[abbreviated_hand] = eval_abbreviated_hand(abbreviated_hand, board)
     return abbreviated_hand_to_eval
 
+
+def prune_range(hand_strengths : list, prune_prob):
+    #print(hand_strengths)
+    hand_strengths.sort()
+    return hand_strengths[:int((1-prune_prob)*len(hand_strengths))]
 # Example usage:
 # cards = [('A', 'Diamond'), ('K', 'Diamond'), ('Q', 'Diamond'), ('J', 'Diamond'), ('10', 'Diamond'),
 #          ('3', 'Spade'), ('2', 'Heart')]
