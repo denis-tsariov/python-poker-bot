@@ -23,11 +23,6 @@ poker_hand_percentiles = {
     "A2o": 54, "K2o": 69, "Q2o": 79, "J2o": 87, "T2o": 94, "92o": 97, "82o": 99, "72o": 100, "62o": 95, "52o": 84, "42o": 86, "32o": 91, "22o": 24,
 }
 
-    
-abbreviated_hand_to_hands = {
-    abbreviated_hand:treys_format_hand(abbreviated_hand) for abbreviated_hand in poker_hand_percentiles.keys()
-} # example entry => "AAs": set{"AsAs", "AhAh"...""}
-
 def create_all_treys_cards() -> dict[str, treys.Card]:
     ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
     suits = ['h', 'd', 'c', 's']  # h = hearts, d = diamonds, c = clubs, s = spades
@@ -146,6 +141,12 @@ def prune_range(hand_strengths : list, prune_prob):
     #print(hand_strengths)
     hand_strengths.sort()
     return hand_strengths[:int((1-prune_prob)*len(hand_strengths))]
+  
+      
+abbreviated_hand_to_hands = {
+    abbreviated_hand:treys_format_hand(abbreviated_hand) for abbreviated_hand in poker_hand_percentiles.keys()
+} # example entry => "AAs": set{"AsAs", "AhAh"...""}
+
 # Example usage:
 # cards = [('A', 'Diamond'), ('K', 'Diamond'), ('Q', 'Diamond'), ('J', 'Diamond'), ('10', 'Diamond'),
 #          ('3', 'Spade'), ('2', 'Heart')]
