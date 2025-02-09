@@ -61,7 +61,7 @@ class max_eric_bot(Bot):
     round_count = 4
     fold_history = 0
     history_count = 0
-    villain_tolerance = 25
+    villain_tolerance = 50
     raised = False
     our_raise_count = 0
     rank_map = {
@@ -120,11 +120,11 @@ class max_eric_bot(Bot):
         # print('acting', state, hand, self.my_id)
         #print(board_cards)
         if state.round != "pre-flop":
-            hands = self.get_hands_in_percentile_range(self.preflop_fold_rate())
+            hands = self.get_hands_in_percentile_range((self.villain_tolerance))
             all_parsed_hands = eval_hand_strength.parse_all_hands(hands)
             our_hand = hand_cards+board_cards
             rets = [eval_hand_strength.compare_hands(our_hand, h+board_cards) for h in all_parsed_hands]
-            num_hands_evaluated = len(all_parsed_hands)
+            num_hands_evaluated = len(all_parsed_hands) or 1
             win_chance = rets.count(1)/num_hands_evaluated
             loss_chance = rets.count(-1)/num_hands_evaluated
             tie_chance = rets.count(0)/num_hands_evaluated
@@ -217,6 +217,12 @@ class max_eric_bot(Bot):
         print("start game", my_id)
         self.isFirstMove = True
         self.round_count += 1
+        if self.history_count == 10:
+          self.update_tolerance()
+          self.history_count = 1
+        else:
+          self.history_count += 1
+          
         self.our_raise_count = 0
 
     def win_prob(
