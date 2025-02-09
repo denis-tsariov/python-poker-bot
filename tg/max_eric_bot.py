@@ -59,6 +59,8 @@ class max_eric_bot(Bot):
     isFirstMove = True
     recently_raised = False
     round_count = 4
+    fold_history = 0
+    history_count = 0
     villain_tolerance = 25
     raised = False
     rank_map = {
@@ -84,7 +86,7 @@ class max_eric_bot(Bot):
         #     self.raised = False
         #     state.target_bet = 0
         #     return {"type": "call"}
-        if state.round == "pre-flop" and self.raised == False:
+        if state.round == "pre-flop" and not self.raised:
             #self.raised = False
             #state.target_bet = 0
             return {"type": "call"}
@@ -182,6 +184,7 @@ class max_eric_bot(Bot):
             self.isFirstMove = False
             if action.type == "fold":
                 self.preflop_fold_ += 1
+                self.fold_history +=1
         print("opponent action?", action, player)
 
     def game_over(self, payouts):
@@ -193,6 +196,11 @@ class max_eric_bot(Bot):
         print("start game", my_id)
         self.isFirstMove = True
         self.round_count += 1
+        if self.history_count == 10:
+          self.history_count = 1
+        else:
+          self.history_count += 1
+          
 
     def win_prob(
         self,
@@ -237,3 +245,9 @@ class max_eric_bot(Bot):
 
     def preflop_fold_rate(self):
       return (1-(self.preflop_fold_ / self.round_count)) * 100
+    
+    def update_tolerance(self):
+      alpha = 0.1
+      observed_tol = (1 - (self.fold_history / 10)) * 100
+      self.villain_tolerance += alpha * (observed_tol - self.villain_tolerance)
+      return
