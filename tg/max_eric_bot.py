@@ -1,5 +1,5 @@
 import asyncio
-from typing import Tuple
+from typing import Tuple,Optional, List, Set
 import argparse
 import treys
 import time
@@ -105,6 +105,7 @@ class max_eric_bot(Bot):
         #print(board_cards)
         if state.round != "pre-flop":
             hands = self.get_hands_in_percentile_range(self.preflop_fold_rate())
+            hands = self.get_round_range(hands, state)
             all_parsed_hands = eval_hand_strength.parse_all_hands(hands)
             our_hand = hand_cards+board_cards
             rets = [eval_hand_strength.compare_hands(our_hand, h+board_cards) for h in all_parsed_hands]
@@ -149,7 +150,7 @@ class max_eric_bot(Bot):
         moves = [0, EV_Call, best_bet_EV]
         best_move = moves.index(max(moves))
         
-        if  best_move == 0:
+        if best_move == 0:
             if not self.raised:
                 self.raised = False
                 print("WE CALL")
@@ -158,7 +159,7 @@ class max_eric_bot(Bot):
                 self.raised = False
                 print("WE FOLD")
                 return {"type": "fold"}
-        elif  best_move == 1:
+        elif best_move == 1:
             self.raised = False
             print("WE CALL A BET")
             return {"type": "call"}
@@ -199,7 +200,7 @@ class max_eric_bot(Bot):
         hand = [treys.Card.new(card_name(hand[0])), treys.Card.new(card_name(hand[1]))]
         board = [treys.Card.new(card_name(card)) for card in state.cards]
         evaluator = treys.Evaluator()
-        for i in range(args.simulations):
+        for _ in range(args.simulations):
             deck = treys.Deck()
             deck.shuffle()
             for card in hand + board:
@@ -215,9 +216,6 @@ class max_eric_bot(Bot):
                 out += 1
         return out / args.simulations
 
-    def pot_odds(self, state: pokerTypes.PokerSharedState, ev: float) -> float:
-        return (state.pot + state.target_bet) * ev - state.target_bet * (1 - ev)
-
     def get_hands_in_percentile_range(
         self, max_percentile: int, max_threshold=60
     ) -> list[str]:
@@ -230,6 +228,21 @@ class max_eric_bot(Bot):
 
     def get_player_max_percentile(self, player_id: str) -> int:
         return self.fold_.get(player_id, 15) / self.round_count
+    
+    def get_round_range(self, 
+            initial_range: List[str], 
+            state: pokerTypes.PokerSharedState,
+            
+            # opponent_bet: Optional[float] = "Not Implemented", 
+            # opponent_stack: Optional[float] = "Not Implemented"
+        ) -> dict[str, int]: #! Assuming that the opponent just raised or called a raise
 
+        abbreviated_hand_to_eval = eval_hand_strength.gen_eval_range_map(initial_range, state.board)
+        print(abbreviated_hand_to_eval)
+        
+        new_range = [hand for hand, eval in abbreviated_hand_to_eval.items() if eval > 0.5]
+        
+        #! Not implemented, need to still prune based on new evals
+        return initial_range
     def preflop_fold_rate(self):
       return (1-(self.preflop_fold_ / self.round_count)) * 100
