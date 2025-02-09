@@ -97,6 +97,11 @@ class max_eric_bot(Bot):
         # print('acting', state, hand, self.my_id)
         p = self.win_prob(state, hand)
         EV_Call = p * (state.pot + state.target_bet) - (state.target_bet) * (1 - p)
+        pot_odds = self.pot_odds(state, p)
+
+        # TODO: Not sure how you guys want to implement this but here's pot odds
+        action = "fold" if pot_odds < 0 else "call"
+
         best_val = min(0, EV_Call)
         action = "fold" if best_val == 0 else "call"
         hands = self.get_hands_in_percentile_range(self.preflop_fold_rate())
@@ -152,6 +157,9 @@ class max_eric_bot(Bot):
             if score < other:
                 out += 1
         return out / args.simulations
+
+    def pot_odds(self, state: pokerTypes.PokerSharedState, ev: float) -> float:
+        return (state.pot + state.target_bet) * ev - state.target_bet * (1 - ev)
 
     def get_hands_in_percentile_range(
         self, max_percentile: int, max_threshold=60
