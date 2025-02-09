@@ -27,12 +27,12 @@ def card_strength(c):
     elif c=='J': return -11
     else: return -int(c)
 
-l = sorted(c_list, key=card_strength)
-print(l)
+#l = sorted(c_list, key=card_strength)
+#print(l)
 
 def get_best_hand(cards_list, suits_list):
     most_common_numbers = Counter(cards_list).most_common(len(cards_list))
-    print(most_common_numbers)
+    #print(most_common_numbers)
 
     #for val in most_common_numbers:
 
@@ -73,7 +73,7 @@ def get_best_poker_hand(cards):
         if counts == [2, 1, 1, 1]:
             return (1, sorted_hand_ranks)
         return (0, sorted_hand_ranks)
-    
+    #print(cards)
     best_hand = max(combinations(cards, 5), key=get_hand_rank)
     #end = time.time()
     #print(end-start)
@@ -82,8 +82,8 @@ def get_best_poker_hand(cards):
 def compare_hands(cards1, cards2):
     best_hand1, rank1 = get_best_poker_hand(cards1)
     best_hand2, rank2 = get_best_poker_hand(cards2)
-    print(best_hand1, rank1)
-    print(best_hand2, rank2)
+    #print(best_hand1, rank1)
+    #print(best_hand2, rank2)
     if rank1[0] > rank2[0]:
         return 1
     elif rank2[0] > rank1[0]:
@@ -94,14 +94,12 @@ def compare_hands(cards1, cards2):
                 return 1
             elif rank2[1][i] > rank1[1][i]:
                 return -1
-    return 0
+        return 0
 
 def parse_hand_string(hand_string):
     suits = ['Heart', 'Diamond', 'Club', 'Spade']
     rank_map = {'2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
                 'T': '10', 'J': 'J', 'Q': 'Q', 'K': 'K', 'A': 'A'}
-    
-    
     rank1, rank2, suited = hand_string[0], hand_string[1], hand_string[2]
         
     if suited == 's':

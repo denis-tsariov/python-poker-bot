@@ -49,8 +49,9 @@ sorted_percentiles = sorted(percentile_to_hands.keys())
 
 
 class max_eric_bot(Bot):
+    last_target_bet = 0
     fold_ = 0
-    preflop_fold_ = 4
+    preflop_fold_ = 2
     call_ = 0
     raise_ = 0
     check_ = 0
@@ -76,13 +77,19 @@ class max_eric_bot(Bot):
     }
 
     def act(self, state, hand):
+        #time.sleep(3)
         # check if rased and if big blind during pre-flop
-        if self.last_target_bet == state.target_bet and state.round == "pre-flop":
-            self.raised = False
+        # if self.last_target_bet == state.target_bet and state.round == "pre-flop":
+        #     self.raised = False
+        #     state.target_bet = 0
+        #     return {"type": "call"}
+        if state.round == "pre-flop" and self.raised == False:
+            #self.raised = False
+            #state.target_bet = 0
             return {"type": "call"}
-        if not (self.raised):
-            return {"type": "call"}
-
+        #if not (self.raised):
+            #return {"type": "call"}
+        
         # parsing board into [('A', 'Diamond'), ('K', 'Diamond')] format into board_cards
         board_cards = []
         for card in state.cards:
@@ -95,20 +102,70 @@ class max_eric_bot(Bot):
 
         # print('asked to act')
         # print('acting', state, hand, self.my_id)
-        p = self.win_prob(state, hand)
+        #print(board_cards)
+        if state.round != "pre-flop":
+            hands = self.get_hands_in_percentile_range(self.preflop_fold_rate())
+            all_parsed_hands = eval_hand_strength.parse_all_hands(hands)
+            our_hand = hand_cards+board_cards
+            rets = [eval_hand_strength.compare_hands(our_hand, h+board_cards) for h in all_parsed_hands]
+            num_hands_evaluated = len(all_parsed_hands)
+            win_chance = rets.count(1)/num_hands_evaluated
+            loss_chance = rets.count(-1)/num_hands_evaluated
+            tie_chance = rets.count(0)/num_hands_evaluated
+            print("win chance from range", win_chance)
+            print("loss chance from range", loss_chance)
+            print("tie chance from range", tie_chance)
+        else:
+            win_chance = self.win_prob(state, hand)
+            loss_chance = 1-win_chance
+            tie_chance = 0
+            print("win chance from treys", win_chance)
+        #print(self.preflop_fold_rate())
+        #print(hands, self.preflop_fold_rate())
+        #print(len(eval_hand_strength.parse_all_hands(hands)))
+        #p = self.win_prob(state, hand)
+        p = win_chance
+        EV_fold = 0
         EV_Call = p * (state.pot + state.target_bet) - (state.target_bet) * (1 - p)
-        pot_odds = self.pot_odds(state, p)
-
-        # TODO: Not sure how you guys want to implement this but here's pot odds
-        action = "fold" if pot_odds < 0 else "call"
-
-        best_val = min(0, EV_Call)
-        action = "fold" if best_val == 0 else "call"
-        hands = self.get_hands_in_percentile_range(self.preflop_fold_rate())
-        print(hands, self.preflop_fold_rate())
-        print(len(eval_hand_strength.parse_all_hands(hands)))
-        self.raised = False
-        return {"type": action}
+        print("OUR HAND", hand_cards)
+        print("POT", state.pot)
+        print("Target bet", state.target_bet)
+        print("fold rate", self.preflop_fold_rate())
+        print("fold equity", win_chance*state.pot)
+        print("win equity", tie_chance*(state.pot+100))
+        print("loss equity", loss_chance*(100))
+        print("EV of a call", EV_Call)
+        best_bet_move = {"type": "raise", "amount": 0}
+        best_bet_EV = -10000
+        if EV_Call > 0:
+            for bet_val in [10, 20, 30, 40, 50, state.pot, 2*state.pot, 3*state.pot]:
+                EV_Bet = (-loss_chance*(bet_val)+win_chance*(state.pot+bet_val))
+                print("EV of bet size", bet_val, ":", EV_Bet)
+                if EV_Bet > best_bet_EV:
+                    best_bet_move["amount"] = bet_val
+                    best_bet_EV = EV_Bet
+        print("EV of a best bet", best_bet_EV)
+        print("===========================")
+        moves = [0, EV_Call, best_bet_EV]
+        best_move = moves.index(max(moves))
+        
+        if  best_move == 0:
+            if not self.raised:
+                self.raised = False
+                print("WE CALL")
+                return {"type": "call"}
+            else:
+                self.raised = False
+                print("WE FOLD")
+                return {"type": "fold"}
+        elif  best_move == 1:
+            self.raised = False
+            print("WE CALL A BET")
+            return {"type": "call"}
+        else: 
+            self.raised = False
+            print("WE RAISE")
+            return best_bet_move
 
     def opponent_action(self, action, player):
         if action.type == "fold":
