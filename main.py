@@ -4,6 +4,7 @@ import argparse
 
 from tg.EV_bot import EV_bot
 from tg.max_bot import max_bot
+from tg.max_eric_bot import max_eric_bot
 from tg.bot import Bot
 import time
 
@@ -56,5 +57,5 @@ class TemplateBot(Bot):
 
 
 if __name__ == "__main__":
-    bot = max_bot(args.host, args.port, args.room, args.username)
+    bot = max_eric_bot(args.host, args.port, args.room, args.username)
     asyncio.run(bot.start())

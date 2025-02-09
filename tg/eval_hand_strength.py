@@ -122,7 +122,7 @@ def parse_all_hands(list_hand_string):
 
 # result = compare_hands(cards, cards2)
 # print(result)
-print(parse_hand_string('AQo'))
+# print(parse_hand_string('AQo'))
 # # Test parse_hand_string function
 # #print(parse_hand_string('AKs'))
 # print(len(parse_hand_string('Q2o')))
