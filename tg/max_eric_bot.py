@@ -51,7 +51,7 @@ sorted_percentiles = sorted(percentile_to_hands.keys())
 class max_eric_bot(Bot):
     last_target_bet = 0
     fold_ = 0
-    preflop_fold_ = 2
+    preflop_fold_ = 3
     call_ = 0
     raise_ = 0
     check_ = 0
@@ -63,6 +63,7 @@ class max_eric_bot(Bot):
     history_count = 0
     villain_tolerance = 25
     raised = False
+    our_raise_count = 0
     rank_map = {
         2: "2",
         3: "3",
@@ -80,16 +81,28 @@ class max_eric_bot(Bot):
     }
 
     def act(self, state, hand):
+        villain_stack = 0
+        our_stack = 0
+        our_index = -1
+        for ind, player in enumerate(state.players):
+            if player.id != "freaks":
+                villain_stack = player.stack
+            else:
+                our_stack = player.stack
+                our_index = ind
+        if villain_stack == 0:
+            return {"type": "call"}
         #time.sleep(3)
         # check if rased and if big blind during pre-flop
         # if self.last_target_bet == state.target_bet and state.round == "pre-flop":
         #     self.raised = False
         #     state.target_bet = 0
         #     return {"type": "call"}
-        if state.round == "pre-flop" and not self.raised:
-            #self.raised = False
-            #state.target_bet = 0
-            return {"type": "call"}
+
+        # if state.round == "pre-flop" and self.raised == False:
+        #     #self.raised = False
+        #     #state.target_bet = 0
+        #     return {"type": "call"}
         #if not (self.raised):
             #return {"type": "call"}
         
@@ -140,8 +153,9 @@ class max_eric_bot(Bot):
         print("EV of a call", EV_Call)
         best_bet_move = {"type": "raise", "amount": 0}
         best_bet_EV = -10000
-        if EV_Call > 0:
+        if EV_Call > 10:
             for bet_val in [10, 20, 30, 40, 50, state.pot, 2*state.pot, 3*state.pot]:
+                bet_val = min(state.pot*0.33, bet_val, our_stack*0.33)
                 EV_Bet = (-loss_chance*(bet_val)+win_chance*(state.pot+bet_val))
                 print("EV of bet size", bet_val, ":", EV_Bet)
                 if EV_Bet > best_bet_EV:
@@ -153,9 +167,11 @@ class max_eric_bot(Bot):
         best_move = moves.index(max(moves))
         
         if  best_move == 0:
-            if not self.raised:
+    
+            if not self.raised and state.dealer_position == our_index:
+                print("were we raised:", self.raised)
                 self.raised = False
-                print("WE CALL")
+                print("WE CALL BECAUSE WE ARE BIG BLIND")
                 return {"type": "call"}
             else:
                 self.raised = False
@@ -167,8 +183,13 @@ class max_eric_bot(Bot):
             return {"type": "call"}
         else: 
             self.raised = False
-            self.recently_raised = True
+            print("OUR RAISE COUNT:", self.our_raise_count)
+            if self.our_raise_count > 2:
+                print("WE CALL BECAUSE OF TOO MANY RAISES")
+                return {"type": "call"}
             print("WE RAISE")
+            self.our_raise_count += 1
+            raise_val = min(villain_stack, our_stack, bet_val)
             return best_bet_move
 
     def opponent_action(self, action, player):
@@ -196,11 +217,7 @@ class max_eric_bot(Bot):
         print("start game", my_id)
         self.isFirstMove = True
         self.round_count += 1
-        if self.history_count == 10:
-          self.history_count = 1
-        else:
-          self.history_count += 1
-          
+        self.our_raise_count = 0
 
     def win_prob(
         self,
