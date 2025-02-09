@@ -71,7 +71,7 @@ class max_eric_bot(Bot):
     total_ = 0
     isFirstMove = True
     round_count = 0
-  
+
     def act(self, state, hand):
         # print('asked to act')
         # print('acting', state, hand, self.my_id)

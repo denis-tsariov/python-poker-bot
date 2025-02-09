@@ -107,8 +107,13 @@ def parse_hand_string(hand_string):
     if suited == 's':
         return [[(rank_map[rank1], suit1), (rank_map[rank2], suit1)] for suit1 in suits]
     else:
+        if rank_map[rank1] == rank_map[rank2]: return [[(rank_map[rank1], suit1), (rank_map[rank2], suit2)] for suit1, suit2 in combinations(suits, 2)]
         return [[(rank_map[rank1], suit1), (rank_map[rank2], suit2)] for suit1, suit2 in permutations(suits, 2)]
-
+def parse_all_hands(list_hand_string):
+    all_hands = []
+    for hand in list_hand_string:
+        all_hands = all_hands + parse_hand_string(hand)
+    return all_hands
 # Example usage:
 # cards = [('A', 'Diamond'), ('K', 'Diamond'), ('Q', 'Diamond'), ('J', 'Diamond'), ('10', 'Diamond'),
 #          ('3', 'Spade'), ('2', 'Heart')]
@@ -117,7 +122,7 @@ def parse_hand_string(hand_string):
 
 # result = compare_hands(cards, cards2)
 # print(result)
-
+print(parse_hand_string('AQo'))
 # # Test parse_hand_string function
 # #print(parse_hand_string('AKs'))
 # print(len(parse_hand_string('Q2o')))
