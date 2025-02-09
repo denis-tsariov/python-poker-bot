@@ -60,15 +60,15 @@ percentile_to_hands = defaultdict(list)
 for hand, percentile in poker_hand_percentiles.items():
     percentile_to_hands[percentile].append(hand)
 sorted_percentiles = sorted(percentile_to_hands.keys())
-    
-
 
 class max_eric_bot(Bot):
-    fold_ = defaultdict(int)
-    call_ = defaultdict(int)
-    raise_ = defaultdict(int)
-    check_ = defaultdict(int)
-    total_ = defaultdict(int)
+    fold_ = 0
+    preflop_fold_ = 0
+    call_ = 0
+    raise_ = 0
+    check_ = 0
+    total_ = 0
+    isFirstMove = True
     round_count = 0
   
     def act(self, state, hand):
@@ -81,9 +81,11 @@ class max_eric_bot(Bot):
         return {'type': action}
 
     def opponent_action(self, action, player):
-        print(f'action: {action.type}')
-        print(f'folds count: {self.fold_}, raise count: {self.raise_}, call count: {self.call_}')
         getattr(self, f'{action.type}_')[player.username] += 1
+        if self.isFirstMove:
+          self.isFirstMove = False
+          if self.preflop_fold_:
+            self.preflop_fold_ += 1
         print('opponent action?', action, player)
 
     def game_over(self, payouts):
@@ -118,13 +120,16 @@ class max_eric_bot(Bot):
                 out += 1
         return out/args.simulations
     
-    def get_hands_in_percentile_range(self, min_percentile:int, max_percentile:int, min_threshold = 0, max_threshold = 60) -> list[str]:
+    def get_hands_in_percentile_range(self, max_percentile:int, max_threshold = 60) -> list[str]:
         hands = []
         max_percentile = min(max_threshold, max_percentile)
         for percentile in sorted_percentiles:
-            if min_percentile <= percentile <= max_percentile:
+            if percentile <= max_percentile:
                 hands.extend(percentile_to_hands[percentile])
         return hands
 
     def get_player_max_percentile(self, player_id: str) -> int:
         return self.fold_.get(player_id, 15) /self.round_count
+      
+    def preflop_fold_rate(self):
+      return self.preflop_fold_ / self.round_count

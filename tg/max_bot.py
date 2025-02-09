@@ -41,6 +41,7 @@ def card_name(card: pokerTypes.Card):
 
 class max_bot(Bot):
     fold_ = {}
+    preflop_fold_ = {}
     call_ = {}
     raise_ = {}
     check_ = {}
@@ -59,6 +60,7 @@ class max_bot(Bot):
           self.fold_[player.username] = 0
           self.call_[player.username] = 0
           self.raise_[player.username] = 0
+          
           
         print(f'action: {action.type}')
         print(f'folds count: {self.fold_}, raise count: {self.raise_}, call count: {self.call_}')
