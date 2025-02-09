@@ -1,6 +1,10 @@
 from itertools import combinations, permutations
 from collections import Counter
+from typing import Optional, List, Tuple, Set
+import treys
 import time
+
+evaluator = treys.Evaluator()
 #from types import *
 poker_hand_percentiles = {
     "AAo": 0, "AKs": 2, "AQs": 2, "AJs": 3, "ATs": 5, "A9s": 8, "A8s": 10, "A7s": 13, "A6s": 14, "A5s": 12, "A4s": 14, "A3s": 14, "A2s": 17,
@@ -18,24 +22,16 @@ poker_hand_percentiles = {
     "A2o": 54, "K2o": 69, "Q2o": 79, "J2o": 87, "T2o": 94, "92o": 97, "82o": 99, "72o": 100, "62o": 95, "52o": 84, "42o": 86, "32o": 91, "22o": 24,
 }
 
-#each hand must be a sorted list in descending order of card strangth and a list of the corresponding suits of those cards
-c_list = ['A', 'Q', 'K', 'J', '3', '4', '3']
-def card_strength(c):
-    if c == 'A': return -14
-    elif c=='K': return -13
-    elif c=='Q': return -12
-    elif c=='J': return -11
-    else: return -int(c)
+    
+abbreviated_hand_to_hands = {
+    abbreviated_hand:treys_format_hand(abbreviated_hand) for abbreviated_hand in poker_hand_percentiles.keys()
+} # example entry => "AAs": set{"AsAs", "AhAh"...""}
 
-#l = sorted(c_list, key=card_strength)
-#print(l)
-
-def get_best_hand(cards_list, suits_list):
-    most_common_numbers = Counter(cards_list).most_common(len(cards_list))
-    #print(most_common_numbers)
-
-    #for val in most_common_numbers:
-
+def create_all_treys_cards() -> dict[str, treys.Card]:
+    ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
+    suits = ['h', 'd', 'c', 's']  # h = hearts, d = diamonds, c = clubs, s = spades
+    return {rank + suit: treys.Card.new(rank + suit) for rank in ranks for suit in suits}
+all_treys_cards = create_all_treys_cards()
 
 def get_best_poker_hand(cards):
     #start = time.time()
@@ -96,7 +92,7 @@ def compare_hands(cards1, cards2):
                 return -1
         return 0
 
-def parse_hand_string(hand_string):
+def parse_hand_string(hand_string) -> List[List[str]]:
     suits = ['Heart', 'Diamond', 'Club', 'Spade']
     rank_map = {'2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
                 'T': '10', 'J': 'J', 'Q': 'Q', 'K': 'K', 'A': 'A'}
@@ -107,11 +103,43 @@ def parse_hand_string(hand_string):
     else:
         if rank_map[rank1] == rank_map[rank2]: return [[(rank_map[rank1], suit1), (rank_map[rank2], suit2)] for suit1, suit2 in combinations(suits, 2)]
         return [[(rank_map[rank1], suit1), (rank_map[rank2], suit2)] for suit1, suit2 in permutations(suits, 2)]
+    
 def parse_all_hands(list_hand_string):
     all_hands = []
     for hand in list_hand_string:
         all_hands = all_hands + parse_hand_string(hand)
     return all_hands
+
+
+def treys_format_hand(hand_string) -> List[str]: # Wrapper for parse_hand_string that returns a string in the format treys expects
+    all_hands = []
+    for hand in parse_hand_string(hand_string):
+        print(hand)
+        all_hands.append(f"{hand[0][0]}{hand[0][1][0].lower()}{hand[1][0]}{hand[1][1][0].lower()}")
+    return all_hands
+
+def eval_abbreviated_hand(abbreviated_hand:str, board: List[str]) -> list[float]:
+    # Map the abbreviated hand to all possible hands
+    hands = abbreviated_hand_to_hands[abbreviated_hand]
+    evaluations = []
+    for hand in hands:
+        cards = [
+            all_treys_cards[hand[0:2]],
+            all_treys_cards[hand[2:4]],
+        ]
+        board = [all_treys_cards[card_str] for card_str in board]
+        
+        eval = evaluator.evaluate(board, cards)
+        evaluations.append(eval)
+            
+    return sum(evaluations)/len(evaluations)
+
+def gen_eval_range_map(abbreviated_hands: List[str], board: List[str]) -> dict[float]:
+    abbreviated_hand_to_eval = {}
+    for abbreviated_hand in abbreviated_hands:
+        abbreviated_hand_to_eval[abbreviated_hand] = eval_abbreviated_hand(abbreviated_hand, board)
+    return abbreviated_hand_to_eval
+
 # Example usage:
 # cards = [('A', 'Diamond'), ('K', 'Diamond'), ('Q', 'Diamond'), ('J', 'Diamond'), ('10', 'Diamond'),
 #          ('3', 'Spade'), ('2', 'Heart')]
