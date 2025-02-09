@@ -121,6 +121,7 @@ class max_eric_bot(Bot):
         #print(board_cards)
         if state.round != "pre-flop":
             hands = self.get_hands_in_percentile_range((self.villain_tolerance))
+            hands = self.get_round_range(hands, state)
             all_parsed_hands = eval_hand_strength.parse_all_hands(hands)
             our_hand = hand_cards+board_cards
             #print("length of all parsed hands", len(all_parsed_hands))
