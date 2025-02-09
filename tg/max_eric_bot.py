@@ -57,6 +57,7 @@ class max_eric_bot(Bot):
     check_ = 0
     total_ = 0
     isFirstMove = True
+    recently_raised = False
     round_count = 4
     villain_tolerance = 25
     raised = False
@@ -164,6 +165,7 @@ class max_eric_bot(Bot):
             return {"type": "call"}
         else: 
             self.raised = False
+            self.recently_raised = True
             print("WE RAISE")
             return best_bet_move
 
@@ -175,7 +177,8 @@ class max_eric_bot(Bot):
         elif action.type == "raise":
             self.raised = True
             self.raise_ += 1
-        if self.isFirstMove:
+            self.isFirstMove = False
+        if self.recently_raised and self.isFirstMove:
             self.isFirstMove = False
             if action.type == "fold":
                 self.preflop_fold_ += 1
@@ -185,6 +188,7 @@ class max_eric_bot(Bot):
         print("game over", payouts)
 
     def start_game(self, my_id):
+        self.recently_raised = False
         self.my_id = my_id
         print("start game", my_id)
         self.isFirstMove = True
