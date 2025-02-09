@@ -47,13 +47,13 @@ sorted_percentiles = sorted(percentile_to_hands.keys())
 
 class max_eric_bot(Bot):
     fold_ = 0
-    preflop_fold_ = 10
+    preflop_fold_ = 4
     call_ = 0
     raise_ = 0
     check_ = 0
     total_ = 0
     isFirstMove = True
-    round_count = 30
+    round_count = 4
     villain_tolerance = 25
 
     def act(self, state, hand):
@@ -126,4 +126,4 @@ class max_eric_bot(Bot):
         return self.fold_.get(player_id, 15) /self.round_count
       
     def preflop_fold_rate(self):
-      return (self.preflop_fold_ / self.round_count) * 100
+      return (1-(self.preflop_fold_ / self.round_count)) * 100
