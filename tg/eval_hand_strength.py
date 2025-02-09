@@ -1,6 +1,7 @@
 from itertools import combinations, permutations
 from collections import Counter
 import time
+import random
 #from types import *
 poker_hand_percentiles = {
     "AAo": 0, "AKs": 2, "AQs": 2, "AJs": 3, "ATs": 5, "A9s": 8, "A8s": 10, "A7s": 13, "A6s": 14, "A5s": 12, "A4s": 14, "A3s": 14, "A2s": 17,
@@ -112,6 +113,11 @@ def parse_all_hands(list_hand_string):
     for hand in list_hand_string:
         all_hands = all_hands + parse_hand_string(hand)
     return all_hands
+
+def prune_range(hand_strengths : list, prune_prob):
+    #print(hand_strengths)
+    hand_strengths.sort()
+    return hand_strengths[:int((1-prune_prob)*len(hand_strengths))]
 # Example usage:
 # cards = [('A', 'Diamond'), ('K', 'Diamond'), ('Q', 'Diamond'), ('J', 'Diamond'), ('10', 'Diamond'),
 #          ('3', 'Spade'), ('2', 'Heart')]

@@ -90,7 +90,7 @@ class max_eric_bot(Bot):
             else:
                 our_stack = player.stack
                 our_index = ind
-        if villain_stack == 0:
+        if villain_stack <= 1:
             return {"type": "call"}
         #time.sleep(3)
         # check if rased and if big blind during pre-flop
@@ -123,8 +123,13 @@ class max_eric_bot(Bot):
             hands = self.get_hands_in_percentile_range((self.villain_tolerance))
             all_parsed_hands = eval_hand_strength.parse_all_hands(hands)
             our_hand = hand_cards+board_cards
+            #print("length of all parsed hands", len(all_parsed_hands))
             rets = [eval_hand_strength.compare_hands(our_hand, h+board_cards) for h in all_parsed_hands]
-            num_hands_evaluated = len(all_parsed_hands) or 1
+            prune_percent = 0
+            if self.raised == True:
+                prune_percent = min(75, state.target_bet/villain_stack)
+            rets = eval_hand_strength.prune_range(rets, prune_percent)
+            num_hands_evaluated = len(all_parsed_hands)
             win_chance = rets.count(1)/num_hands_evaluated
             loss_chance = rets.count(-1)/num_hands_evaluated
             tie_chance = rets.count(0)/num_hands_evaluated
@@ -167,11 +172,12 @@ class max_eric_bot(Bot):
         best_move = moves.index(max(moves))
         
         if  best_move == 0:
-    
             if not self.raised and state.dealer_position == our_index:
                 print("were we raised:", self.raised)
                 self.raised = False
                 print("WE CALL BECAUSE WE ARE BIG BLIND")
+                return {"type": "call"}
+            if not self.raised:
                 return {"type": "call"}
             else:
                 self.raised = False
