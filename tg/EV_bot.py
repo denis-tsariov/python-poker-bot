@@ -42,19 +42,60 @@ def card_name(card: pokerTypes.Card):
 
 
 class EV_bot(Bot):
+    last_target_bet = 0
+    raised = False
+    rank_map = {
+        2: "2",
+        3: "3",
+        4: "4",
+        5: "5",
+        6: "6",
+        7: "7",
+        8: "8",
+        9: "9",
+        10: "10",
+        11: "J",
+        12: "Q",
+        13: "K",
+        1: "A",
+    }
+
     def act(self, state, hand):
+        if self.last_target_bet == state.target_bet and state.round == "pre-flop":
+            self.raised = False
+            return {"type": "call"}
+        if not (self.raised):
+            return {"type": "call"}
+
+        # parsing board into [('A', 'Diamond'), ('K', 'Diamond')] format into board_cards
+        board_cards = []
+        for card in state.cards:
+            board_cards.append((self.rank_map[card.rank], card.suit.capitalize()))
+        # hand_cards formatted in the same way
+        hand_cards = [
+            (self.rank_map[hand[0].rank], hand[0].suit.capitalize()),
+            (self.rank_map[hand[1].rank], hand[1].suit.capitalize()),
+        ]
+
+        print("board translation", board_cards)
+
         print("asked to act")
         # print("acting", state, hand, self.my_id)
         print(hand)
         p = self.win_prob(state, hand)
         print(p)
-        EV_Call = p * (state.pot + state.target_bet) - (state.target_bet) * (1 - p)
+        EV_Call = p * (state.pot + state.target_bet) - (state.target_bet) * (1 - p) + 5
         print(EV_Call)
         best_val = max(0, EV_Call)
         action = "fold" if best_val == 0 else "call"
+        if action == "call":
+            self.last_target_bet = state.target_bet
+        self.raised = False
         return {"type": action}
 
     def opponent_action(self, action, player):
+        if action.type == "raise":
+            self.raised = True
         print("opponent action?", action, player)
 
     def game_over(self, payouts):
