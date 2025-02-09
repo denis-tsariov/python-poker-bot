@@ -25,7 +25,7 @@ parser.add_argument(
 parser.add_argument(
     "--username",
     type=str,
-    default="freaks",
+    default="freaks 10",
     help="The username for this bot (make sure it's unique)",
 )
 

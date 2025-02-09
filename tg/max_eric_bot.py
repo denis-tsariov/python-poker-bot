@@ -85,27 +85,14 @@ class max_eric_bot(Bot):
         our_stack = 0
         our_index = -1
         for ind, player in enumerate(state.players):
-            if player.id != "freaks":
+            if player.id != self.username:
                 villain_stack = player.stack
             else:
                 our_stack = player.stack
                 our_index = ind
         if villain_stack <= 1:
             return {"type": "call"}
-        #time.sleep(3)
-        # check if rased and if big blind during pre-flop
-        # if self.last_target_bet == state.target_bet and state.round == "pre-flop":
-        #     self.raised = False
-        #     state.target_bet = 0
-        #     return {"type": "call"}
 
-        # if state.round == "pre-flop" and self.raised == False:
-        #     #self.raised = False
-        #     #state.target_bet = 0
-        #     return {"type": "call"}
-        #if not (self.raised):
-            #return {"type": "call"}
-        
         # parsing board into [('A', 'Diamond'), ('K', 'Diamond')] format into board_cards
         board_cards = []
         for card in state.cards:
@@ -151,16 +138,16 @@ class max_eric_bot(Bot):
         print("OUR HAND", hand_cards)
         print("POT", state.pot)
         print("Target bet", state.target_bet)
-        print("fold rate", self.preflop_fold_rate())
+        print("fold rate", self.villain_tolerance)
         print("fold equity", win_chance*state.pot)
         print("win equity", tie_chance*(state.pot+100))
         print("loss equity", loss_chance*(100))
         print("EV of a call", EV_Call)
         best_bet_move = {"type": "raise", "amount": 0}
         best_bet_EV = -10000
-        if EV_Call > 10:
-            for bet_val in [10, 20, 30, 40, 50, state.pot, 2*state.pot, 3*state.pot]:
-                bet_val = min(state.pot*0.33, bet_val, our_stack*0.33)
+        if EV_Call > 15:
+            for bet_val in [10, 20, 30, 40, 50, 0.33*state.pot, 0.5*state.pot,  state.pot, 2*state.pot, 3*state.pot]:
+                bet_val = min(bet_val, our_stack*0.25)
                 EV_Bet = (-loss_chance*(bet_val)+win_chance*(state.pot+bet_val))
                 print("EV of bet size", bet_val, ":", EV_Bet)
                 if EV_Bet > best_bet_EV:
@@ -172,11 +159,11 @@ class max_eric_bot(Bot):
         best_move = moves.index(max(moves))
         
         if  best_move == 0:
-            if not self.raised and state.dealer_position == our_index:
-                print("were we raised:", self.raised)
-                self.raised = False
-                print("WE CALL BECAUSE WE ARE BIG BLIND")
-                return {"type": "call"}
+            # if not self.raised and state.dealer_position == our_index:
+            #     print("were we raised:", self.raised)
+            #     self.raised = False
+            #     print("WE CALL BECAUSE WE ARE BIG BLIND")
+            #     return {"type": "call"}
             if not self.raised:
                 return {"type": "call"}
             else:
@@ -196,6 +183,8 @@ class max_eric_bot(Bot):
             print("WE RAISE")
             self.our_raise_count += 1
             raise_val = min(villain_stack, our_stack, bet_val)
+            print("WE RAISE", raise_val)
+            best_bet_move["amount"] = raise_val
             return best_bet_move
 
     def opponent_action(self, action, player):
